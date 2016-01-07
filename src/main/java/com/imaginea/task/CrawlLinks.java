@@ -19,7 +19,7 @@ import org.jsoup.select.Elements;
 
 public class CrawlLinks {
 
-	private static Logger LOG = Logger.getLogger(CrawlLinks.class);
+	private Logger LOG = Logger.getLogger(CrawlLinks.class);
 
 	TreeSet<String> arrLink = new TreeSet<String>();
 	HashMap<String, String> docs = new HashMap<String, String>();
@@ -220,7 +220,6 @@ public class CrawlLinks {
 				}
 				if(Integer.parseInt(textYear)==Integer.parseInt(year))
 				{
-					System.out.println("@@@@@@@@@@@@ Storing Link IN FETCHMAILCONTENT is::: "+lnkChk);
 				File outputDirectory = new File(outFile.getPath() + "/" + textYear + "/" + month + "/" + date + "/" + day);
 				if (!outputDirectory.exists())
 					outputDirectory.mkdirs();
@@ -232,7 +231,6 @@ public class CrawlLinks {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			LOG.error("Exception Occurred is: " + e.getMessage());
 		}
 	}
