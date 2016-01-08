@@ -22,11 +22,7 @@ public class CrawlLinks {
 	private Logger LOG = Logger.getLogger(CrawlLinks.class);
 
 	TreeSet<String> arrLink = new TreeSet<String>();
-	HashMap<String, String> docs = new HashMap<String, String>();
 	String baseURL;
-	int pdfCnt;
-	int htmlCnt;
-	int repCnt;
 	HashMap<String, Integer> linkLevels = new HashMap<String, Integer>();
 	HashMap<String, String> parentChild = new HashMap<String, String>();
 
@@ -55,7 +51,6 @@ public class CrawlLinks {
 			level--;
 			linkLevels.put(pageURL, new Integer(level));
 			arrLink.clear();
-			docs.clear();
 		} catch (Exception e) {
 			LOG.error("Excpetion Occurred is: " + e.getMessage());
 			e.printStackTrace();
@@ -66,18 +61,17 @@ public class CrawlLinks {
 		for (Element link : links) {
 			String lnk = link.attr("href");
 			LOG.debug("--Selected href link is: " + lnk);
-			//if (lnk.indexOf(baseURL) >= 0)
-			if(true){
+			// if (lnk.indexOf(baseURL) >= 0)
+			if (true) {
 				String lnkChk = "";
 				if (lnk.indexOf("#") > 0) {
 					lnkChk = lnk.substring(0, lnk.indexOf("#"));
 				} else {
 					lnkChk = lnk;
 				}
-				if(!lnk.contains("http://"))
-				{
+				if (!lnk.contains("http://")) {
 					lnkChk = "";
-					lnkChk = baseURL+lnk;
+					lnkChk = baseURL + lnk;
 				}
 				arrLink.add(lnkChk);
 				if (linkLevels.get(lnkChk) != null) {
@@ -102,7 +96,8 @@ public class CrawlLinks {
 		LOG.info("--getPageLinks() Called--");
 		try {
 			level++;
-			LOG.debug("--Connecting to the Page Link: " + pageLink + " via JSOUP and the Path in which the Mails are downloading is: " + outFile.getPath() + " --");
+			LOG.debug("--Connecting to the Page Link: " + pageLink
+					+ " via JSOUP and the Path in which the Mails are downloading is: " + outFile.getPath() + " --");
 			Document doc = Jsoup.connect(pageLink).get();
 			Elements links = doc.select("a[href]");
 			for (Element link : links) {
@@ -155,7 +150,7 @@ public class CrawlLinks {
 							}
 
 							arrLink.add(lnkChk);
-							
+
 							fetchMailContent(lnkChk, year, outFile);
 
 							if (linkLevels.get(lnkChk) != null) {
@@ -186,7 +181,7 @@ public class CrawlLinks {
 	}
 
 	private void fetchMailContent(String lnkChk, String year, File outFile) {
-		
+
 		String day = "";
 		String date = "";
 		String month = "";
@@ -218,16 +213,16 @@ public class CrawlLinks {
 						break;
 					}
 				}
-				if(Integer.parseInt(textYear)==Integer.parseInt(year))
-				{
-				File outputDirectory = new File(outFile.getPath() + "/" + textYear + "/" + month + "/" + date + "/" + day);
-				if (!outputDirectory.exists())
-					outputDirectory.mkdirs();
-				File fileName = new File(outputDirectory.getPath() + "/" + time);
-				FileOutputStream fos = new FileOutputStream(fileName);
-				fos.write(mailTextContent.getBytes());
-				fos.close();
-				LOG.info("FOS is closed after writing the file");
+				if (Integer.parseInt(textYear) == Integer.parseInt(year)) {
+					File outputDirectory = new File(
+							outFile.getPath() + "/" + textYear + "/" + month + "/" + date + "/" + day);
+					if (!outputDirectory.exists())
+						outputDirectory.mkdirs();
+					File fileName = new File(outputDirectory.getPath() + "/" + time);
+					FileOutputStream fos = new FileOutputStream(fileName);
+					fos.write(mailTextContent.getBytes());
+					fos.close();
+					LOG.info("FOS is closed after writing the file");
 				}
 			}
 		} catch (Exception e) {
