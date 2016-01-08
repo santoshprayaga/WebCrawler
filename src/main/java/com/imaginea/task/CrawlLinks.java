@@ -156,6 +156,8 @@ public class CrawlLinks {
 								arrLink.add(lnkChk);
 
 								fetchMailContent(lnkChk, year, outFile);
+								
+								LOG.info("Returned!!!!");
 
 								if (linkLevels.get(lnkChk) != null) {
 									int cLevel = Integer.parseInt(linkLevels.get(new String(lnkChk)).toString());
@@ -236,6 +238,11 @@ public class CrawlLinks {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
+			if(e.getMessage().contains("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml"))
+			{
+				LOG.error("Exception Occurred and Returning Back Again");
+				return;
+			}
 			LOG.error("Exception Occurred is: " + e.getMessage());
 		}
 	}
