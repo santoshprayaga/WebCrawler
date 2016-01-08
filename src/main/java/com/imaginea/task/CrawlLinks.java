@@ -47,7 +47,7 @@ public class CrawlLinks {
 			level++;
 
 			fetchHrefLinks(links, pageURL, level, year, outFile);
-
+			LOG.info("Fetching Hrefs Finished");
 			level--;
 			linkLevels.put(pageURL, new Integer(level));
 			arrLink.clear();
@@ -60,9 +60,9 @@ public class CrawlLinks {
 	public void fetchHrefLinks(Elements links, String pageURL, int level, String year, File outFile) {
 		for (Element link : links) {
 			String lnk = link.attr("href");
-			LOG.debug("--Selected href link is: " + lnk);
-			// if (lnk.indexOf(baseURL) >= 0)
-			if (true) {
+			LOG.debug("Lnk for Fetching is:: " + lnk);
+			if (lnk.contains(year)) {
+				LOG.debug("--Selected href link is: " + lnk);
 				String lnkChk = "";
 				if (lnk.indexOf("#") > 0) {
 					lnkChk = lnk.substring(0, lnk.indexOf("#"));
@@ -70,10 +70,11 @@ public class CrawlLinks {
 					lnkChk = lnk;
 				}
 				if (!lnk.contains("http://")) {
-					lnkChk = "";
-					lnkChk = baseURL + lnk;
+					// lnkChk = "";
+					lnkChk = pageURL + lnk;
 				}
 				arrLink.add(lnkChk);
+				LOG.debug("--Passing linkCheck is: " + lnkChk + " and Level is: " + level);
 				if (linkLevels.get(lnkChk) != null) {
 					int cLevel = Integer.parseInt(linkLevels.get(new String(lnkChk)).toString());
 					if (level < cLevel) {
@@ -95,77 +96,81 @@ public class CrawlLinks {
 	public void getPageLinks(String pageLink, int level, String year, File outFile) {
 		LOG.info("--getPageLinks() Called--");
 		try {
-			level++;
-			LOG.debug("--Connecting to the Page Link: " + pageLink
-					+ " via JSOUP and the Path in which the Mails are downloading is: " + outFile.getPath() + " --");
-			Document doc = Jsoup.connect(pageLink).get();
-			Elements links = doc.select("a[href]");
-			for (Element link : links) {
-				LOG.info("--In the Outer Loop of getPageLinks()--");
-				String lnk = link.attr("abs:href");
-				if (lnk.indexOf(baseURL) >= 0) {
-					String lnkChk = "";
-					if (lnk.indexOf("#") > 0) {
-						lnkChk = lnk.substring(0, lnk.indexOf("#"));
-					} else {
-						lnkChk = lnk;
-					}
-					if (arrLink.contains(new String(lnkChk))) {
-						if (linkLevels.get(lnkChk) != null) {
-							int curLevel = Integer.parseInt(linkLevels.get(new String(lnkChk)).toString());
-							if (level < curLevel) {
+			if (pageLink.contains(year)) {
+				level++;
+				LOG.debug("--Connecting to the Page Link: " + pageLink
+						+ " via JSOUP and the Path in which the Mails are downloading is: " + outFile.getPath()
+						+ " --");
+				Document doc = Jsoup.connect(pageLink).get();
+				Elements links = doc.select("a[href]");
+				for (Element link : links) {
+					LOG.info("--In the Outer Loop of getPageLinks()--");
+					String lnk = link.attr("abs:href");
+					if (lnk.indexOf(baseURL) >= 0) {
+						String lnkChk = "";
+						if (lnk.indexOf("#") > 0) {
+							lnkChk = lnk.substring(0, lnk.indexOf("#"));
+						} else {
+							lnkChk = lnk;
+						}
+						if (arrLink.contains(new String(lnkChk))) {
+							if (linkLevels.get(lnkChk) != null) {
+								int curLevel = Integer.parseInt(linkLevels.get(new String(lnkChk)).toString());
+								if (level < curLevel) {
+									linkLevels.put(lnkChk, new Integer(level));
+									String extension = "";
+									if (lnkChk.lastIndexOf('.') > 0) {
+										extension = lnkChk.substring(lnkChk.lastIndexOf('.') + 1);
+										if (extension.indexOf("#") > 0) {
+											extension = extension.substring(0, extension.indexOf("#"));
+										}
+									}
+									if (extension.equalsIgnoreCase("htm") || extension.equalsIgnoreCase("html")
+											|| extension.equalsIgnoreCase("aspx")
+											|| extension.equalsIgnoreCase("jsp")) {
+										parentChild.put(lnkChk, pageLink);
+										LOG.info("Recurrence of getPageLinks() occurred as Link has Extension");
+										getPageLinks(lnkChk, level, year, outFile);
+									}
+								}
+							} else {
+								parentChild.put(lnkChk, pageLink);
 								linkLevels.put(lnkChk, new Integer(level));
-								String extension = "";
-								if (lnkChk.lastIndexOf('.') > 0) {
-									extension = lnkChk.substring(lnkChk.lastIndexOf('.') + 1);
+							}
+							continue;
+						} else {
+							String path = lnk.substring((baseURL.length() + (lnk.indexOf(baseURL))));
+							String extension = "";
+							if (path != null) {
+								if (path.indexOf('.') > 0) {
+									extension = path.substring(path.lastIndexOf('.') + 1);
 									if (extension.indexOf("#") > 0) {
 										extension = extension.substring(0, extension.indexOf("#"));
 									}
 								}
-								if (extension.equalsIgnoreCase("htm") || extension.equalsIgnoreCase("html")
-										|| extension.equalsIgnoreCase("aspx") || extension.equalsIgnoreCase("jsp")) {
-									parentChild.put(lnkChk, pageLink);
-									LOG.info("Recurrence of getPageLinks() occurred as Link has Extension");
-									getPageLinks(lnkChk, level, year, outFile);
+								if (path.lastIndexOf('/') >= 0 && path.indexOf('.') > 0) {
+									path = path.substring(0, path.lastIndexOf('/'));
+									path = baseURL + path;
 								}
-							}
-						} else {
-							parentChild.put(lnkChk, pageLink);
-							linkLevels.put(lnkChk, new Integer(level));
-						}
-						continue;
-					} else {
-						String path = lnk.substring((baseURL.length() + (lnk.indexOf(baseURL))));
-						String extension = "";
-						if (path != null) {
-							if (path.indexOf('.') > 0) {
-								extension = path.substring(path.lastIndexOf('.') + 1);
-								if (extension.indexOf("#") > 0) {
-									extension = extension.substring(0, extension.indexOf("#"));
-								}
-							}
-							if (path.lastIndexOf('/') >= 0 && path.indexOf('.') > 0) {
-								path = path.substring(0, path.lastIndexOf('/'));
-								path = baseURL + path;
-							}
 
-							arrLink.add(lnkChk);
+								arrLink.add(lnkChk);
 
-							fetchMailContent(lnkChk, year, outFile);
+								fetchMailContent(lnkChk, year, outFile);
 
-							if (linkLevels.get(lnkChk) != null) {
-								int cLevel = Integer.parseInt(linkLevels.get(new String(lnkChk)).toString());
-								if (level < cLevel) {
+								if (linkLevels.get(lnkChk) != null) {
+									int cLevel = Integer.parseInt(linkLevels.get(new String(lnkChk)).toString());
+									if (level < cLevel) {
+										linkLevels.put(lnkChk, new Integer(level));
+										parentChild.put(lnkChk, pageLink);
+										LOG.info("Recurrence of getPageLinks() occurred");
+										getPageLinks(lnkChk, level, year, outFile);
+									}
+								} else {
 									linkLevels.put(lnkChk, new Integer(level));
 									parentChild.put(lnkChk, pageLink);
 									LOG.info("Recurrence of getPageLinks() occurred");
 									getPageLinks(lnkChk, level, year, outFile);
 								}
-							} else {
-								linkLevels.put(lnkChk, new Integer(level));
-								parentChild.put(lnkChk, pageLink);
-								LOG.info("Recurrence of getPageLinks() occurred");
-								getPageLinks(lnkChk, level, year, outFile);
 							}
 						}
 					}
@@ -176,6 +181,7 @@ public class CrawlLinks {
 			LOG.info("Recurrence of getPageLinks() occurred");
 			getPageLinks(pageLink, level, year, outFile);
 		} catch (Exception e) {
+			e.printStackTrace();
 			LOG.error("Exception Occurred is: " + e.getMessage());
 		}
 	}
@@ -188,44 +194,48 @@ public class CrawlLinks {
 		String time = "";
 		String textYear = "";
 		try {
-			LOG.info("Fetching Mail Content");
-			Document mailContentDoc = Jsoup.connect(lnkChk).get();
-			String mailContent = mailContentDoc.html();
-			String mailTextContent = mailContentDoc.text();
-			if (mailContent.contains("Received") && mailContent.contains("Delivered-To")
-					&& mailContent.contains("Reply-To") && mailContent.contains("Subject") && mailContent.contains("To")
-					&& mailContent.contains("From") && mailContent.contains("Date")) {
+			if (lnkChk.contains(year)) {
+				LOG.info("Fetching Mail Content");
+				Document mailContentDoc = Jsoup.connect(lnkChk).get();
+				String mailContent = mailContentDoc.html();
+				String mailTextContent = mailContentDoc.text();
+				if (mailContent.contains("Received") && mailContent.contains("Delivered-To")
+						&& mailContent.contains("Reply-To") && mailContent.contains("Subject")
+						&& mailContent.contains("To") && mailContent.contains("From") && mailContent.contains("Date")) {
 
-				Elements mailContentElements = mailContentDoc.getAllElements();
-				for (Element mailContentElement : mailContentElements) {
-					if (mailContentElement.text().contains("Date:")) {
-						String dateIndexString = mailContentElement.text()
-								.substring(mailContentElement.text().indexOf("Date: "));
-						int dateIndex = dateIndexString.indexOf("Date: ") + 6;
-						int timeIndex = dateIndexString.indexOf("0000") - 2;
-						String dateString = dateIndexString.substring(dateIndex, timeIndex);
-						String dateArray[] = dateString.split(" ");
-						day = dateArray[0].split(",")[0];
-						date = dateArray[1];
-						month = dateArray[2];
-						textYear = dateArray[3];
-						time = dateArray[4];
-						break;
+					Elements mailContentElements = mailContentDoc.getAllElements();
+					for (Element mailContentElement : mailContentElements) {
+						if (mailContentElement.text().contains("Date:")) {
+							String dateIndexString = mailContentElement.text()
+									.substring(mailContentElement.text().indexOf("Date: "));
+							int dateIndex = dateIndexString.indexOf("Date: ") + 6;
+							int timeIndex = dateIndexString.indexOf("Date: ") + 31;
+							LOG.debug("Date and Time Indexes are: "+dateIndex+" == "+timeIndex+" dateIndexString is: "+dateIndexString);
+							String dateString = dateIndexString.substring(dateIndex, timeIndex);
+							String dateArray[] = dateString.split(" ");
+							day = dateArray[0].split(",")[0];
+							date = dateArray[1];
+							month = dateArray[2];
+							textYear = dateArray[3];
+							time = dateArray[4];
+							break;
+						}
 					}
-				}
-				if (Integer.parseInt(textYear) == Integer.parseInt(year)) {
-					File outputDirectory = new File(
-							outFile.getPath() + "/" + textYear + "/" + month + "/" + date + "/" + day);
-					if (!outputDirectory.exists())
-						outputDirectory.mkdirs();
-					File fileName = new File(outputDirectory.getPath() + "/" + time);
-					FileOutputStream fos = new FileOutputStream(fileName);
-					fos.write(mailTextContent.getBytes());
-					fos.close();
-					LOG.info("FOS is closed after writing the file");
+					if (Integer.parseInt(textYear) == Integer.parseInt(year)) {
+						File outputDirectory = new File(
+								outFile.getPath() + "/" + textYear + "/" + month + "/" + date + "/" + day);
+						if (!outputDirectory.exists())
+							outputDirectory.mkdirs();
+						File fileName = new File(outputDirectory.getPath() + "/" + time);
+						FileOutputStream fos = new FileOutputStream(fileName);
+						fos.write(mailTextContent.getBytes());
+						fos.close();
+						LOG.info("FOS is closed after writing the file");
+					}
 				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			LOG.error("Exception Occurred is: " + e.getMessage());
 		}
 	}
