@@ -22,11 +22,13 @@ public class ExecutableClass {
 			String pageURL = bundle.getString("pageURL");
 			String year = bundle.getString("year");
 			File outFile = new File(bundle.getString("filePath"));
+			String searchTag = bundle.getString("searchTag");
+			String searchAttr = bundle.getString("searchAttr");
 
 			LOG.info("--Given Page URL: " + pageURL + " and year to fetch mails is: " + year+" --");
 			CrawlLinks link = new CrawlLinks();
 			LOG.info("--Getting links by calling the method getWebLinks()--");
-			link.getWebLinks(pageURL, year, outFile);
+			link.getWebLinks(pageURL, year, outFile, searchTag, searchAttr);
 		} catch (Exception e) {
 			LOG.error("Excpetion in Main Class is:: " + e.getMessage());
 		}

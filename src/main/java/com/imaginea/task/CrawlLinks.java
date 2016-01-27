@@ -26,7 +26,7 @@ public class CrawlLinks {
 	HashMap<String, Integer> linkLevels = new HashMap<String, Integer>();
 	HashMap<String, String> parentChild = new HashMap<String, String>();
 
-	public void getWebLinks(String pageURL, String year, File outFile) {
+	public void getWebLinks(String pageURL, String year, File outFile, String searchTag, String searchAttr) {
 		LOG.info("--getWebLinks() called--");
 		try {
 			int level = 1;
@@ -43,10 +43,10 @@ public class CrawlLinks {
 			}
 			LOG.debug("--Connecting to the Page URL: " + pageURL + " via JSOUP --");
 			Document doc = Jsoup.connect(pageURL).get();
-			Elements links = doc.select("a[href]");
+			Elements links = doc.select(searchTag);
 			level++;
 
-			fetchHrefLinks(links, pageURL, level, year, outFile);
+			fetchHrefLinks(links, pageURL, level, year, outFile, searchAttr, searchTag);
 			LOG.info("Fetching Hrefs Finished");
 			level--;
 			linkLevels.put(pageURL, new Integer(level));
@@ -57,9 +57,10 @@ public class CrawlLinks {
 		}
 	}
 
-	public void fetchHrefLinks(Elements links, String pageURL, int level, String year, File outFile) {
+	public void fetchHrefLinks(Elements links, String pageURL, int level, String year, File outFile, String searchAttr,
+			String searchTag) {
 		for (Element link : links) {
-			String lnk = link.attr("href");
+			String lnk = link.attr(searchAttr);
 			LOG.debug("Lnk for Fetching is:: " + lnk);
 			if (lnk.contains(year)) {
 				LOG.debug("--Selected href link is: " + lnk);
@@ -81,19 +82,19 @@ public class CrawlLinks {
 						linkLevels.put(lnkChk, new Integer(level));
 						parentChild.put(lnkChk, pageURL);
 						LOG.info("--Calling getPageLinks() from IF of fetchHrefLinks--");
-						getPageLinks(lnkChk, level, year, outFile);
+						getPageLinks(lnkChk, level, year, outFile, searchTag);
 					}
 				} else {
 					linkLevels.put(lnkChk, new Integer(level));
 					parentChild.put(lnkChk, pageURL);
 					LOG.info("--Calling getPageLinks() from ELSE of fetchHrefLinks--");
-					getPageLinks(lnkChk, level, year, outFile);
+					getPageLinks(lnkChk, level, year, outFile, searchTag);
 				}
 			}
 		}
 	}
 
-	public void getPageLinks(String pageLink, int level, String year, File outFile) {
+	public void getPageLinks(String pageLink, int level, String year, File outFile, String searchTag) {
 		LOG.info("--getPageLinks() Called--");
 		try {
 			if (pageLink.contains(year)) {
@@ -102,7 +103,7 @@ public class CrawlLinks {
 						+ " via JSOUP and the Path in which the Mails are downloading is: " + outFile.getPath()
 						+ " --");
 				Document doc = Jsoup.connect(pageLink).get();
-				Elements links = doc.select("a[href]");
+				Elements links = doc.select(searchTag);
 				for (Element link : links) {
 					LOG.info("--In the Outer Loop of getPageLinks()--");
 					String lnk = link.attr("abs:href");
@@ -130,7 +131,7 @@ public class CrawlLinks {
 											|| extension.equalsIgnoreCase("jsp")) {
 										parentChild.put(lnkChk, pageLink);
 										LOG.info("Recurrence of getPageLinks() occurred as Link has Extension");
-										getPageLinks(lnkChk, level, year, outFile);
+										getPageLinks(lnkChk, level, year, outFile, searchTag);
 									}
 								}
 							} else {
@@ -156,7 +157,7 @@ public class CrawlLinks {
 								arrLink.add(lnkChk);
 
 								fetchMailContent(lnkChk, year, outFile);
-								
+
 								LOG.info("Returned!!!!");
 
 								if (linkLevels.get(lnkChk) != null) {
@@ -165,13 +166,13 @@ public class CrawlLinks {
 										linkLevels.put(lnkChk, new Integer(level));
 										parentChild.put(lnkChk, pageLink);
 										LOG.info("Recurrence of getPageLinks() occurred");
-										getPageLinks(lnkChk, level, year, outFile);
+										getPageLinks(lnkChk, level, year, outFile, searchTag);
 									}
 								} else {
 									linkLevels.put(lnkChk, new Integer(level));
 									parentChild.put(lnkChk, pageLink);
 									LOG.info("Recurrence of getPageLinks() occurred");
-									getPageLinks(lnkChk, level, year, outFile);
+									getPageLinks(lnkChk, level, year, outFile, searchTag);
 								}
 							}
 						}
@@ -181,7 +182,7 @@ public class CrawlLinks {
 		} catch (SocketTimeoutException ste) {
 			LOG.error("Exception Occurred is: " + ste.getMessage());
 			LOG.info("Recurrence of getPageLinks() occurred");
-			getPageLinks(pageLink, level, year, outFile);
+			getPageLinks(pageLink, level, year, outFile, searchTag);
 		} catch (Exception e) {
 			e.printStackTrace();
 			LOG.error("Exception Occurred is: " + e.getMessage());
@@ -212,7 +213,8 @@ public class CrawlLinks {
 									.substring(mailContentElement.text().indexOf("Date: "));
 							int dateIndex = dateIndexString.indexOf("Date: ") + 6;
 							int timeIndex = dateIndexString.indexOf("Date: ") + 31;
-							LOG.debug("Date and Time Indexes are: "+dateIndex+" == "+timeIndex+" dateIndexString is: "+dateIndexString);
+							LOG.debug("Date and Time Indexes are: " + dateIndex + " == " + timeIndex
+									+ " dateIndexString is: " + dateIndexString);
 							String dateString = dateIndexString.substring(dateIndex, timeIndex);
 							String dateArray[] = dateString.split(" ");
 							day = dateArray[0].split(",")[0];
@@ -238,8 +240,8 @@ public class CrawlLinks {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			if(e.getMessage().contains("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml"))
-			{
+			if (e.getMessage()
+					.contains("Unhandled content type. Must be text/*, application/xml, or application/xhtml+xml")) {
 				LOG.error("Exception Occurred and Returning Back Again");
 				return;
 			}

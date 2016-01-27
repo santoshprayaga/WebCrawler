@@ -20,6 +20,8 @@ public class CrawlLinksTestCase {
 	int level;
 	Elements links;
 	String samplePageLink ;
+	String searchTag;
+	String searchAttr;
 
 	@Before
 	public void getCrawlClassInstance() {
@@ -27,6 +29,8 @@ public class CrawlLinksTestCase {
 			link = new CrawlLinks();
 			pageURL = bundle.getString("pageURL");
 			year = bundle.getString("year");
+			searchTag = bundle.getString("searchTag");
+			searchAttr = bundle.getString("searchAttr");
 			outFile = new File(bundle.getString("filePath"));
 			level = 5;
 			links = Jsoup.connect(pageURL).get().getAllElements();
@@ -38,17 +42,17 @@ public class CrawlLinksTestCase {
 
 	@Test
 	public void testGetWebLinks() {
-		link.getWebLinks(pageURL, year, outFile);
+		link.getWebLinks(pageURL, year, outFile, searchTag, searchAttr);
 	}
 
 	@Test
 	public void testFetchHrefLinks() {
-		link.fetchHrefLinks(links, pageURL, level, year, outFile);
+		link.fetchHrefLinks(links, pageURL, level, year, outFile, searchTag, searchAttr);
 	}
 
 	@Test
 	public void testGetPageLinks() {
-		link.getPageLinks(samplePageLink, level, year, outFile);
+		link.getWebLinks(pageURL, year, outFile, searchTag, searchAttr);
 	}
 
 }
