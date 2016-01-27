@@ -6,7 +6,7 @@ import java.util.ResourceBundle;
 
 import org.jsoup.Jsoup;
 import org.jsoup.select.Elements;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class CrawlLinksTestCase {
@@ -23,7 +23,7 @@ public class CrawlLinksTestCase {
 	String searchTag;
 	String searchAttr;
 
-	@Before
+	@BeforeClass
 	public void getCrawlClassInstance() {
 		try {
 			link = new CrawlLinks();
@@ -54,5 +54,5 @@ public class CrawlLinksTestCase {
 	public void testGetPageLinks() {
 		link.getWebLinks(pageURL, year, outFile, searchTag, searchAttr);
 	}
-
+	
 }
