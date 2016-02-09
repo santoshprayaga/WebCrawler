@@ -3,6 +3,7 @@ package com.imaginea.task;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.TreeSet;
 
@@ -25,8 +26,10 @@ public class CrawlLinks {
 	String baseURL;
 	HashMap<String, Integer> linkLevels = new HashMap<String, Integer>();
 	HashMap<String, String> parentChild = new HashMap<String, String>();
+	int connFailCount = 1;
 
-	public void getWebLinks(String pageURL, String year, File outFile, String searchTag, String searchAttr) {
+	public void getWebLinks(String pageURL, String year, File outFile, String searchTag, String searchAttr,
+			Integer connTryCount) {
 		LOG.info("--getWebLinks() called--");
 		try {
 			int level = 1;
@@ -51,6 +54,14 @@ public class CrawlLinks {
 			level--;
 			linkLevels.put(pageURL, new Integer(level));
 			arrLink.clear();
+		} catch (UnknownHostException ue) {
+			if (connFailCount < connTryCount) {
+				connFailCount++;
+				getWebLinks(pageURL, year, outFile, searchTag, searchAttr, connTryCount);
+			} else {
+				LOG.error("Please check with your Internet Connection..We tried for " + connTryCount + " times");
+				ue.printStackTrace();
+			}
 		} catch (Exception e) {
 			LOG.error("Excpetion Occurred is: " + e.getMessage());
 			e.printStackTrace();

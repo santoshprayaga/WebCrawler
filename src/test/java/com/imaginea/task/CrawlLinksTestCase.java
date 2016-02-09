@@ -22,6 +22,7 @@ public class CrawlLinksTestCase {
 	String samplePageLink ;
 	String searchTag;
 	String searchAttr;
+	int connTryCount;
 
 	@BeforeClass
 	public void getCrawlClassInstance() {
@@ -31,6 +32,7 @@ public class CrawlLinksTestCase {
 			year = bundle.getString("year");
 			searchTag = bundle.getString("searchTag");
 			searchAttr = bundle.getString("searchAttr");
+			connTryCount = Integer.parseInt(bundle.getString("connTryCount"));
 			outFile = new File(bundle.getString("filePath"));
 			level = 5;
 			links = Jsoup.connect(pageURL).get().getAllElements();
@@ -42,7 +44,7 @@ public class CrawlLinksTestCase {
 
 	@Test
 	public void testGetWebLinks() {
-		link.getWebLinks(pageURL, year, outFile, searchTag, searchAttr);
+		link.getWebLinks(pageURL, year, outFile, searchTag, searchAttr, connTryCount);
 	}
 
 	@Test
@@ -52,7 +54,7 @@ public class CrawlLinksTestCase {
 
 	@Test
 	public void testGetPageLinks() {
-		link.getWebLinks(pageURL, year, outFile, searchTag, searchAttr);
+		link.getWebLinks(pageURL, year, outFile, searchTag, searchAttr, connTryCount);
 	}
 	
 }
